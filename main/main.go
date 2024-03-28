@@ -8,15 +8,26 @@ import (
 	"strings"
 )
 
+// IsSeparateRune Функция для проверки разделительного символа
+func IsSeparateRune(r rune) bool {
+	switch r {
+	// Ввел самые частые разделительные знаки
+	case ' ', ':', '!':
+		return true
+	}
+	return false
+}
+
 // ReadCLIArgs Чтение CLI ввода с флагом -s
 func ReadCLIArgs() []string {
-	sentence := flag.String("s", "", "Введите ваше предложение: ")
+	var sentence string
+	flag.StringVar(&sentence, "s", "", "Введите ваше предложение: ")
 	flag.Parse()
-	if *sentence == "" {
+	if sentence == "" {
 		fmt.Println("Слова не найдены")
 		return nil
 	}
-	return strings.Fields(*sentence)
+	return strings.FieldsFunc(sentence, IsSeparateRune)
 }
 
 // IsStopWord Проверка на стоп слово
@@ -45,7 +56,7 @@ func IsStopWord(word string) bool {
 // NormalizeWord Нормализатор слова, удаление небуквенных символов
 func NormalizeWord(word string) (normalizeWord string) {
 	// pattern для regex
-	re := regexp.MustCompile(`[^a-zA-Z]+`)
+	re := regexp.MustCompile(`[^a-zA-Z']+`)
 	normalizeWord = re.ReplaceAllString(word, "")
 	normalizeWord = strings.ToLower(strings.TrimSpace(normalizeWord))
 	return normalizeWord
@@ -67,9 +78,10 @@ func StemWord(word string) (string, error) {
 	return snowball.Stem(word, "english", true)
 }
 
-// StemWords Обработка нормализированных слов, выдача результата; Возможно, нейминг немного некорректен, выслушаю предложения
-func StemWords(words []string) {
+// StemWords Обработка нормализированных слов, выдача результата;
+func StemWords(words []string) []string {
 	uniqueWords := make(map[string]bool)
+	stemmingWords := make([]string, 0)
 	for _, word := range words {
 		word, err := StemWord(word)
 
@@ -83,12 +95,15 @@ func StemWords(words []string) {
 		}
 
 		uniqueWords[word] = true
-		fmt.Println(word)
+		stemmingWords = append(stemmingWords, word)
 	}
+	return stemmingWords
 }
 
 func main() {
 	words := ReadCLIArgs()
 	validateWords := ValidateStopWords(words)
-	StemWords(validateWords)
+	for _, word := range StemWords(validateWords) {
+		fmt.Println(word)
+	}
 }
