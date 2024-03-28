@@ -12,7 +12,7 @@ import (
 func IsSeparateRune(r rune) bool {
 	switch r {
 	// Ввел самые частые разделительные знаки
-	case ' ', ':', '!':
+	case ' ', ':', '!', ',':
 		return true
 	}
 	return false
@@ -57,9 +57,10 @@ func IsStopWord(word string) bool {
 func NormalizeWord(word string) (normalizeWord string) {
 	// pattern для regex
 	re := regexp.MustCompile(`[^a-zA-Z']+`)
-	normalizeWord = re.ReplaceAllString(word, "")
-	normalizeWord = strings.ToLower(strings.TrimSpace(normalizeWord))
-	return normalizeWord
+	normalizeWord = strings.ToLower(strings.TrimSpace(
+		re.ReplaceAllString(word, ""),
+	))
+	return
 }
 
 // ValidateStopWords Валидатор, который возвращает слайс без стоп слов
@@ -79,9 +80,8 @@ func StemWord(word string) (string, error) {
 }
 
 // StemWords Обработка нормализированных слов, выдача результата;
-func StemWords(words []string) []string {
+func StemWords(words []string) (stemmingWords []string) {
 	uniqueWords := make(map[string]bool)
-	stemmingWords := make([]string, 0)
 	for _, word := range words {
 		word, err := StemWord(word)
 
@@ -97,7 +97,7 @@ func StemWords(words []string) []string {
 		uniqueWords[word] = true
 		stemmingWords = append(stemmingWords, word)
 	}
-	return stemmingWords
+	return
 }
 
 func main() {
