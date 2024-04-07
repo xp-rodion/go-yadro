@@ -1,3 +1,5 @@
 .idea
 
-main/myapp
+cmd/myapp
+logs/
+database.json
