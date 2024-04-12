@@ -3,8 +3,8 @@ package database
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
+	"strconv"
 )
 
 type Database struct {
@@ -31,28 +31,35 @@ func (d *Database) Create() (bool, error) {
 	return true, nil
 }
 
-func (d *Database) WriteComic(comic map[string]map[string]interface{}) {
-	if len(comic) == 0 {
-		return
-	}
+func (d *Database) Get(id int) (Comic, bool) {
+	Id := strconv.Itoa(id)
+	data := make(map[string]map[string]interface{})
 	fileInfo, _ := os.Stat(d.Filename)
-
-	data := map[string]map[string]interface{}{}
-	if fileInfo.Size() != 0 {
-		file, _ := ioutil.ReadFile(d.Filename)
-		json.Unmarshal(file, &data)
+	if fileInfo.Size() == 0 {
+		return Comic{}, false
 	}
-	for k, v := range comic {
-		data[k] = v
+	file, _ := os.ReadFile(d.Filename)
+	err := json.Unmarshal(file, &data)
+	if err != nil {
+		return Comic{}, false
 	}
-	file, _ := json.MarshalIndent(data, "", "  ")
-	ioutil.WriteFile(d.Filename, file, fileInfo.Mode())
+	content, ok := data[Id]
+	if !ok {
+		return Comic{}, false
+	}
+	return ComicFromDBEntry(Id, content), true
 }
 
-func WriteComics(db *Database, comics [][]byte) {
-	for _, byteComic := range comics {
-		comic, _ := JsonToComic(byteComic)
-		comicMap := comic.ComicToMap()
-		db.WriteComic(comicMap)
+func (d *Database) Add(comic Comic) {
+	fileInfo, _ := os.Stat(d.Filename)
+
+	data := make(map[string]map[string]interface{})
+	if fileInfo.Size() != 0 {
+		file, _ := os.ReadFile(d.Filename)
+		json.Unmarshal(file, &data)
 	}
+	id, aboutComic := comic.ToDBEntry()
+	data[id] = aboutComic
+	file, _ := json.MarshalIndent(data, "", "\t")
+	os.WriteFile(d.Filename, file, fileInfo.Mode())
 }

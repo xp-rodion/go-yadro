@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v2"
 )
@@ -14,9 +14,12 @@ type Config struct {
 }
 
 func (c *Config) Init(filepath string) {
-	data, err := ioutil.ReadFile(filepath)
+	data, err := os.ReadFile(filepath)
 	if err != nil {
 		fmt.Println(err)
 	}
 	err = yaml.Unmarshal(data, &c)
+	if err != nil {
+		fmt.Println("Чтение прошло неудачно", err)
+	}
 }

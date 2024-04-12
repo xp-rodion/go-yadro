@@ -3,10 +3,10 @@ package xkcd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type Client struct {
@@ -17,9 +17,9 @@ type Client struct {
 	logFile     string
 }
 
-func (c *Client) Init(url string, format string, logFile string) {
+func (c *Client) Init(url string, format string, logFile string, timeout int) {
 	c.BaseUrl = url
-	c.Client = &http.Client{}
+	c.Client = &http.Client{Timeout: time.Duration(timeout) * time.Second}
 	c.ComicsCount = getComicsCount(url, format)
 	c.UrlFormat = format
 	c.logFile = logFile
@@ -33,12 +33,7 @@ func getComicsCount(url string, format string) int {
 	}
 	defer resp.Body.Close()
 	var data map[string]interface{}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = json.Unmarshal(body, &data)
+	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,63 +46,24 @@ func (c *Client) reverse(id int) string {
 	return url
 }
 
-func (c *Client) getComic(id int) ([]byte, error) {
+func (c *Client) Get(id int) (Entry, bool) {
 	url := c.reverse(id)
 	client := c.Client
-	body := make([]byte, 0)
+	entry := Entry{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return body, err
+		return entry, false
 	}
 	resp, err := client.Do(req)
-	if err != nil && validateStatusCode(resp.StatusCode) {
-		return body, err
+	if err != nil && c.validateStatusCode(resp.StatusCode) {
+		return entry, false
 	}
 	defer resp.Body.Close()
-	body, err = ioutil.ReadAll(resp.Body)
+	err = json.NewDecoder(resp.Body).Decode(&entry)
 	if err != nil {
-		return body, err
+		return Entry{}, false
 	}
-	return body, nil
-}
-
-func (c *Client) GetFixedComics(amount int, loggingToConsole bool) (comics [][]byte) {
-
-	badRequests := make([]int, 0)
-
-	if amount > c.ComicsCount || amount < 1 {
-		amount = c.ComicsCount
-	}
-	step := float64(amount) / 100.0
-
-	for i := 1; i < amount+1; i++ {
-		comic, err := c.getComic(i)
-		if err != nil {
-			badRequests = append(badRequests, i)
-			continue
-		}
-		if loggingToConsole {
-			fmt.Println(string(comic), "\n\n")
-		} else {
-			fmt.Println(int(float64(i)/step), "%")
-		}
-
-		comics = append(comics, comic)
-	}
-	fmt.Println("Writed!")
-	c.LoggingBadRequest(badRequests)
-	return comics
-}
-
-func (c *Client) GetComicsByIDs(ids []int) (comics [][]byte, err error) {
-	for _, id := range ids {
-		comic, err := c.getComic(id)
-		if err != nil {
-			return nil, err
-		}
-		comics = append(comics, comic)
-	}
-	return comics, nil
+	return entry, true
 }
 
 //LoggingBadRequest логгирование неудачных запросов (будет сохраняться в файле), их можно будет скормить GetComicsByIDs
@@ -127,6 +83,6 @@ func (c *Client) LoggingBadRequest(comics []int) {
 	}
 }
 
-func validateStatusCode(statusCode int) bool {
+func (c *Client) validateStatusCode(statusCode int) bool {
 	return statusCode >= 500 && statusCode <= 505
 }
