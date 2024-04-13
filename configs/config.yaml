@@ -1,0 +1,8 @@
+db_file:
+  database.json
+
+source_url:
+  https://xkcd.com
+
+client_log_file:
+  "logs/xkcd/bad_request.log"

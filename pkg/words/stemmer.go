@@ -1,4 +1,4 @@
-package main
+package words
 
 import (
 	"flag"
@@ -28,6 +28,11 @@ func ReadCLIArgs() []string {
 		return nil
 	}
 	return strings.FieldsFunc(sentence, IsSeparateRune)
+}
+
+// Split Разбиение строки на слайс строк
+func Split(words string) []string {
+	return strings.FieldsFunc(words, IsSeparateRune)
 }
 
 // IsStopWord Проверка на стоп слово
@@ -100,10 +105,9 @@ func StemWords(words []string) (stemmingWords []string) {
 	return
 }
 
-func main() {
-	words := ReadCLIArgs()
+// Stemmer Скомпанованная функция
+func Stemmer(sentence string) []string {
+	words := Split(sentence)
 	validateWords := ValidateStopWords(words)
-	for _, word := range StemWords(validateWords) {
-		fmt.Println(word)
-	}
+	return StemWords(validateWords)
 }
