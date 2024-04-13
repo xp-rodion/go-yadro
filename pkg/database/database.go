@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 )
 
 type Database struct {
@@ -32,8 +31,7 @@ func (d *Database) Create() (bool, error) {
 }
 
 func (d *Database) Get(id int) (Comic, bool) {
-	Id := strconv.Itoa(id)
-	data := make(map[string]map[string]interface{})
+	data := make(map[int]map[string]interface{})
 	fileInfo, _ := os.Stat(d.Filename)
 	if fileInfo.Size() == 0 {
 		return Comic{}, false
@@ -43,17 +41,17 @@ func (d *Database) Get(id int) (Comic, bool) {
 	if err != nil {
 		return Comic{}, false
 	}
-	content, ok := data[Id]
+	content, ok := data[id]
 	if !ok {
 		return Comic{}, false
 	}
-	return ComicFromDBEntry(Id, content), true
+	return ComicFromDBEntry(id, content), true
 }
 
 func (d *Database) Add(comic Comic) {
 	fileInfo, _ := os.Stat(d.Filename)
 
-	data := make(map[string]map[string]interface{})
+	data := make(map[int]map[string]interface{})
 	if fileInfo.Size() != 0 {
 		file, _ := os.ReadFile(d.Filename)
 		json.Unmarshal(file, &data)

@@ -5,10 +5,13 @@ import (
 )
 
 func main() {
-	configPath, _, _ := parseCLIFlags()
+	configPath, amount, logging := parseCLIFlags()
 	cnf := new(config.Config)
 	cnf.Init(configPath)
-	client := initializeClient(cnf.Url, cnf.ClientLogFile, 1)
+	client := initializeClient(cnf.Url, cnf.ClientLogFile, 5)
 	db := initializeDB(cnf.Database)
-	ParseComics(client, db)
+	if !logging {
+		amount = 0
+	}
+	ParseComics(client, db, amount)
 }

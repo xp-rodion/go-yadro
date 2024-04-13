@@ -61,7 +61,7 @@ func (c *Client) Get(id int) (Entry, bool) {
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&entry)
 	if err != nil {
-		return Entry{}, false
+		return entry, false
 	}
 	return entry, true
 }
