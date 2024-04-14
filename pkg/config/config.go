@@ -11,6 +11,7 @@ type Config struct {
 	Url           string `yaml:"source_url"`
 	Database      string `yaml:"db_file"`
 	ClientLogFile string `yaml:"client_log_file"`
+	Goroutines    int    `yaml:"parallel"`
 }
 
 func (c *Config) Init(filepath string) {

@@ -3,18 +3,25 @@ package main
 import (
 	"flag"
 	"fmt"
+	"xkcd/pkg/config"
 	"xkcd/pkg/database"
 	"xkcd/pkg/xkcd"
 )
 
-func initializeDB(filename string) database.Database {
+func initializeDB(filename string, amountEntry int) database.Database {
 	db := database.Database{}
 	db.Init(filename)
 	status := database.ValidateDatabase(db.Filename)
 	if status {
-		db.Create()
+		db.Create(amountEntry)
 	}
 	return db
+}
+
+func initializeConfig(filename string) config.Config {
+	cnf := config.Config{}
+	cnf.Init(filename)
+	return cnf
 }
 
 func initializeClient(url string, logFile string, timeout int) xkcd.Client {
@@ -23,24 +30,11 @@ func initializeClient(url string, logFile string, timeout int) xkcd.Client {
 	return client
 }
 
-func parseCLIFlags() (configFile string, amountComics int, loggingToConsole bool) {
-
+func parseCLIFlags() (configFile string) {
 	flag.StringVar(&configFile, "c", "configs/config.yaml", "Configuration file")
-	flag.IntVar(&amountComics, "n", 0, "Number of comics to out in console")
-	flag.BoolVar(&loggingToConsole, "o", false, "Enable console logging")
-
 	flag.Parse()
-
 	if len(configFile) == 0 {
 		fmt.Println("Don't see Configuration file, use default Configuration file")
-	}
-
-	if amountComics == 0 {
-		fmt.Println("Parse all comics!")
-	}
-
-	if loggingToConsole {
-		fmt.Println("Logging enabled")
 	}
 
 	return
