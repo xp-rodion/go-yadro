@@ -5,7 +5,7 @@ source_url:
   https://xkcd.com
 
 parallel:
-  8
+  24
 
 client_log_file:
   "logs/xkcd/bad_request.log"

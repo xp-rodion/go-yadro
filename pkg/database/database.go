@@ -76,6 +76,22 @@ func (d *Database) Add(comic Comic) {
 	os.WriteFile(d.Filename, file, fileInfo.Mode())
 }
 
+func (d *Database) Adds(comics []Comic) {
+	fileInfo, _ := os.Stat(d.Filename)
+
+	data := make(map[int]map[string]interface{})
+	if fileInfo.Size() != 0 {
+		file, _ := os.ReadFile(d.Filename)
+		json.Unmarshal(file, &data)
+	}
+	for _, comic := range comics {
+		id, aboutComic := comic.ToDBEntry()
+		data[id] = aboutComic
+	}
+	file, _ := json.MarshalIndent(data, "", "\t")
+	os.WriteFile(d.Filename, file, fileInfo.Mode())
+}
+
 func (d *Database) EmptyEntries() []int {
 	fileInfo, _ := os.Stat(d.Filename)
 

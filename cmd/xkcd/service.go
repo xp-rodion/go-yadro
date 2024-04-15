@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"xkcd/pkg/database"
 	"xkcd/pkg/xkcd"
 )
@@ -21,46 +25,69 @@ func ParseComics(client xkcd.Client, db database.Database) {
 	fmt.Print("Parse ended!")
 }
 
-func ParseWorker(wg *sync.WaitGroup, queue chan<- xkcd.Entry, client xkcd.Client, entries []int) {
+func ParseWorker(ctx context.Context, wg *sync.WaitGroup, queue chan<- xkcd.Entry, client xkcd.Client, entries []int) {
 	defer wg.Done()
 	for _, idx := range entries {
-		entry, ok := client.Get(idx)
-		if !ok {
-			continue
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			entry, ok := client.Get(idx)
+			if !ok {
+				continue
+			}
+			queue <- entry
 		}
-		queue <- entry
 	}
 }
 
 func ParallelParseComics(client xkcd.Client, db database.Database, amountGoroutines int) {
 	fmt.Println("Начало парсинга!")
-	var mtx sync.Mutex
+	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	entries := db.EmptyEntries()
 	amountEntries := len(entries)
 	fmt.Printf("%d комиксов будут спаршены\n", amountEntries)
 	queue := make(chan xkcd.Entry, amountEntries)
-	// amountEntries - кол-во всех записей, goroutineEntries - кол-во записей на 1 горутину, amountGoroutines - кол-во горутин
 	goroutineEntries := amountEntries / amountGoroutines
+	comics := make([]database.Comic, amountEntries)
+	wg.Add(amountGoroutines)
+	// amountEntries - кол-во всех записей, goroutineEntries - кол-во записей на 1 горутину, amountGoroutines - кол-во горутин
 	for i := 0; i < amountGoroutines; i++ {
-		wg.Add(1)
 		fmt.Printf("%d/%d горутин учавствует в парсинге\n", i+1, amountGoroutines)
 		start := i*goroutineEntries + 1
 		end := start + goroutineEntries - 1
-		go ParseWorker(&wg, queue, client, entries[start-1:end])
+		go ParseWorker(ctx, &wg, queue, client, entries[start-1:end])
 	}
+
+	notifyChan := make(chan bool, 1)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		wg.Wait()
 		close(queue)
-		fmt.Println("Загрузка в бд...")
+		notifyChan <- true
 	}()
 
+Loop:
+	for {
+		select {
+		case <-sigChan:
+			fmt.Println("Завершаю программу...")
+			cancel()
+			break Loop
+		case <-notifyChan:
+			fmt.Println("Комиксы преобразованы, идет запись в бд, прерывание невозможно!")
+			break Loop
+		}
+	}
+
+	fmt.Println("Загрузка в бд...")
 	for entry := range queue {
 		comic := ConverterEntryToComic(entry)
-		mtx.Lock()
-		db.Add(comic)
-		mtx.Unlock()
+		comics = append(comics, comic)
 	}
+	db.Adds(comics)
 	fmt.Println("Конец парсинга!")
 }

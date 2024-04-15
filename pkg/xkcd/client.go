@@ -66,6 +66,10 @@ func (c *Client) Get(id int) (Entry, bool) {
 	return entry, true
 }
 
+func (c *Client) Search() {
+	fmt.Println("Hi!")
+}
+
 //LoggingBadRequest логгирование неудачных запросов (будет сохраняться в файле), их можно будет скормить GetComicsByIDs
 func (c *Client) LoggingBadRequest(comics []int) {
 
