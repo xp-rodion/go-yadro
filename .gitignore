@@ -2,4 +2,4 @@
 
 cmd/myapp
 logs/
-database.json
+*.json

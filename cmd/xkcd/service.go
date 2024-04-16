@@ -51,15 +51,18 @@ func ParallelParseComics(client xkcd.Client, db database.Database, amountGorouti
 	queue := make(chan xkcd.Entry, amountEntries)
 	goroutineEntries := amountEntries / amountGoroutines
 	comics := make([]database.Comic, amountEntries)
+	remainder := amountEntries - (goroutineEntries * amountGoroutines) // подсчет остатка
 	wg.Add(amountGoroutines)
 	// amountEntries - кол-во всех записей, goroutineEntries - кол-во записей на 1 горутину, amountGoroutines - кол-во горутин
 	for i := 0; i < amountGoroutines; i++ {
 		fmt.Printf("%d/%d горутин учавствует в парсинге\n", i+1, amountGoroutines)
 		start := i*goroutineEntries + 1
 		end := start + goroutineEntries - 1
+		if i == amountGoroutines-1 {
+			end += remainder
+		}
 		go ParseWorker(ctx, &wg, queue, client, entries[start-1:end])
 	}
-
 	notifyChan := make(chan bool, 1)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -74,7 +77,7 @@ Loop:
 	for {
 		select {
 		case <-sigChan:
-			fmt.Println("Завершаю программу...")
+			fmt.Println("Прерываю программу...")
 			cancel()
 			break Loop
 		case <-notifyChan:

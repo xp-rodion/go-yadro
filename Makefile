@@ -8,4 +8,4 @@ build:
 
 clean:
 	go clean
-	rm -f $(BINARY) database.json
+	rm -f $(BINARY) database.json cache.json

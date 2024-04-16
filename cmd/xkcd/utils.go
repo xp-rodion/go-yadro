@@ -24,9 +24,9 @@ func initializeConfig(filename string) config.Config {
 	return cnf
 }
 
-func initializeClient(url string, logFile string, timeout int) xkcd.Client {
+func initializeClient(url, logFile, cacheFile string, amountGoroutines, timeout int) xkcd.Client {
 	client := xkcd.Client{}
-	client.Init(url, "info.0.json", logFile, timeout)
+	client.Init(url, "info.0.json", logFile, cacheFile, amountGoroutines, timeout)
 	return client
 }
 
