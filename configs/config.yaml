@@ -4,5 +4,11 @@ db_file:
 source_url:
   https://xkcd.com
 
+parallel:
+  24
+
+cache_file:
+  cache.json
+
 client_log_file:
   "logs/xkcd/bad_request.log"

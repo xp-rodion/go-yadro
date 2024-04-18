@@ -4,8 +4,8 @@ all:
 	make build
 
 build:
-	go build -o $(BINARY) cmd/xkcd/main.go cmd/xkcd/utils.go cmd/xkcd/converter.go cmd/xkcd/service.go
 
+	go build -o $(BINARY) ./cmd/xkcd
 clean:
 	go clean
-	rm -f $(BINARY)
+	rm -f $(BINARY) database.json cache.json
