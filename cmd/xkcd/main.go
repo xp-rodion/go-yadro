@@ -12,6 +12,5 @@ func main() {
 	client := initializeClient(cnf.Url, cnf.ClientLogFile, cnf.CacheFile, cnf.Goroutines, 6)
 	db := initializeDB(cnf.Database, client.ComicsCount)
 	ParallelParseComics(client, db, cnf.Goroutines)
-	end := time.Now()
-	fmt.Println("Время выполнения:", end.Sub(start))
+	fmt.Println("Время выполнения:", time.Since(start))
 }

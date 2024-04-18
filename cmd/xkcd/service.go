@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -43,7 +42,6 @@ func ParseWorker(ctx context.Context, wg *sync.WaitGroup, queue chan<- xkcd.Entr
 
 func ParallelParseComics(client xkcd.Client, db database.Database, amountGoroutines int) {
 	fmt.Println("Начало парсинга!")
-	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	entries := db.EmptyEntries()
 	amountEntries := len(entries)
@@ -54,6 +52,8 @@ func ParallelParseComics(client xkcd.Client, db database.Database, amountGorouti
 	remainder := amountEntries - (goroutineEntries * amountGoroutines) // подсчет остатка
 	wg.Add(amountGoroutines)
 	// amountEntries - кол-во всех записей, goroutineEntries - кол-во записей на 1 горутину, amountGoroutines - кол-во горутин
+	notifyChan := make(chan bool, 1)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	for i := 0; i < amountGoroutines; i++ {
 		fmt.Printf("%d/%d горутин учавствует в парсинге\n", i+1, amountGoroutines)
 		start := i*goroutineEntries + 1
@@ -63,9 +63,6 @@ func ParallelParseComics(client xkcd.Client, db database.Database, amountGorouti
 		}
 		go ParseWorker(ctx, &wg, queue, client, entries[start-1:end])
 	}
-	notifyChan := make(chan bool, 1)
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		wg.Wait()
@@ -76,9 +73,9 @@ func ParallelParseComics(client xkcd.Client, db database.Database, amountGorouti
 Loop:
 	for {
 		select {
-		case <-sigChan:
+		case <-ctx.Done():
 			fmt.Println("Прерываю программу...")
-			cancel()
+			stop()
 			break Loop
 		case <-notifyChan:
 			fmt.Println("Комиксы преобразованы, идет запись в бд, прерывание невозможно!")
