@@ -13,6 +13,7 @@ type Config struct {
 	ClientLogFile string `yaml:"client_log_file"`
 	Goroutines    int    `yaml:"parallel"`
 	CacheFile     string `yaml:"cache_file"`
+	IndexFile     string `yaml:"index_file"`
 }
 
 func (c *Config) Init(filepath string) {

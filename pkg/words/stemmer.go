@@ -19,15 +19,14 @@ func IsSeparateRune(r rune) bool {
 }
 
 // ReadCLIArgs Чтение CLI ввода с флагом -s
-func ReadCLIArgs() []string {
+func ReadCLIArgs() string {
 	var sentence string
 	flag.StringVar(&sentence, "s", "", "Введите ваше предложение: ")
 	flag.Parse()
 	if sentence == "" {
 		fmt.Println("Слова не найдены")
-		return nil
 	}
-	return strings.FieldsFunc(sentence, IsSeparateRune)
+	return sentence
 }
 
 // Split Разбиение строки на слайс строк
@@ -52,7 +51,8 @@ func IsStopWord(word string) bool {
 		"this", "those", "through", "to", "too", "under", "until", "up",
 		"very", "was", "we", "were", "what", "when", "where", "which", "while",
 		"who", "whom", "why", "will", "with", "you", "your", "yours", "yourself",
-		"yourselves", "i'll":
+		"yourselves", "she's", "we've", "i've", "who's", "they'll", "they're", "i'll",
+		"it'll", "he's", "you'll", "we're", "we'll", "they've", "you've", "aren't", "there's", "it's", "i'm", "you're", "us", "":
 		return true
 	}
 	return false
@@ -61,7 +61,7 @@ func IsStopWord(word string) bool {
 // NormalizeWord Нормализатор слова, удаление небуквенных символов
 func NormalizeWord(word string) (normalizeWord string) {
 	// pattern для regex
-	re := regexp.MustCompile(`[^a-zA-Z']+`)
+	re := regexp.MustCompile(`(?:^|[^a-zA-Z'])'|'(?:$|[^a-zA-Z'])|[^a-zA-Z'\s]`)
 	normalizeWord = strings.ToLower(strings.TrimSpace(
 		re.ReplaceAllString(word, ""),
 	))

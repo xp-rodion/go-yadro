@@ -20,13 +20,10 @@ type Client struct {
 	Cache       Cache
 }
 
-func (c *Client) Init(url, format, logFile, cacheFile string, amountGoroutines, timeout int) {
+func (c *Client) Init(url, format, logFile string, timeout int) {
 	c.BaseUrl = url
 	c.Client = &http.Client{Timeout: time.Duration(timeout) * time.Second}
-	c.Cache = Cache{
-		filename: cacheFile,
-	}
-	c.ComicsCount = c.getComicsCount(amountGoroutines)
+	c.ComicsCount = OldGetComicsCount(url, format)
 	c.UrlFormat = format
 	c.logFile = logFile
 }

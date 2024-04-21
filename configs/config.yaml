@@ -12,3 +12,6 @@ cache_file:
 
 client_log_file:
   "logs/xkcd/bad_request.log"
+
+index_file:
+  index.json

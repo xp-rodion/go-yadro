@@ -2,15 +2,22 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"xkcd/internal/parse"
+	"xkcd/internal/search"
+	"xkcd/internal/utils"
 )
 
 func main() {
-	start := time.Now()
-	configPath := parseCLIFlags()
-	cnf := initializeConfig(configPath)
-	client := initializeClient(cnf.Url, cnf.ClientLogFile, cnf.CacheFile, cnf.Goroutines, 6)
-	db := initializeDB(cnf.Database, client.ComicsCount)
-	ParallelParseComics(client, db, cnf.Goroutines)
-	fmt.Println("Время выполнения:", time.Since(start))
+	configPath, proposal, indexSearch := utils.ParseCLIFlags()
+	cnf := utils.InitializeConfig(configPath)
+	client := utils.InitializeClient(cnf.Url, cnf.CacheFile, 6)
+	db := utils.InitializeDB(cnf.Database, client.ComicsCount)
+	index := utils.InitializeIndex(cnf.IndexFile)
+	parse.ParallelParseComics(client, db, index, cnf.Goroutines)
+	fmt.Println("\nРезультат поиска")
+	if indexSearch {
+		search.IndexRelevantComics(db, index, proposal, 10)
+	} else {
+		search.DBRelevantComics(db, proposal, 10)
+	}
 }
