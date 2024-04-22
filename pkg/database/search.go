@@ -24,6 +24,9 @@ func IndexRelevantComics(source []string, entries map[string][]int, count int) I
 	}
 	idxResult := MapToIndexResult(results)
 	sort.Sort(idxResult)
+	if count > idxResult.Len() {
+		count = idxResult.Len()
+	}
 	return idxResult[:count]
 }
 
