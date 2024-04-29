@@ -43,6 +43,15 @@ func (d *Database) Create(amountEntry int) (bool, error) {
 	return true, nil
 }
 
+func (d *Database) CreateIndex() (bool, error) {
+	file, err := os.Create(d.Filename)
+	if err != nil {
+		return false, fmt.Errorf("error creating database file %s: %s", d.Filename, err)
+	}
+	defer file.Close()
+	return true, nil
+}
+
 func (d *Database) Get(id int) (Comic, bool) {
 	data := make(map[int]map[string]interface{})
 	fileInfo, _ := os.Stat(d.Filename)
@@ -60,6 +69,29 @@ func (d *Database) Get(id int) (Comic, bool) {
 		return Comic{}, false
 	}
 	return ComicFromDBEntry(id, content), true
+}
+
+func (d *Database) Gets(ids []int) []Comic {
+	comics := make([]Comic, 0)
+	data := make(map[int]map[string]interface{})
+	fileInfo, _ := os.Stat(d.Filename)
+
+	if fileInfo.Size() == 0 {
+		return comics
+	}
+	file, _ := os.ReadFile(d.Filename)
+	err := json.Unmarshal(file, &data)
+	if err != nil {
+		return comics
+	}
+	for _, id := range ids {
+		content, ok := data[id]
+		if !ok {
+			continue
+		}
+		comics = append(comics, ComicFromDBEntry(id, content))
+	}
+	return comics
 }
 
 func (d *Database) Add(comic Comic) {
@@ -85,11 +117,77 @@ func (d *Database) Adds(comics []Comic) {
 		json.Unmarshal(file, &data)
 	}
 	for _, comic := range comics {
+		if comic.Id == 0 {
+			continue
+		}
 		id, aboutComic := comic.ToDBEntry()
 		data[id] = aboutComic
 	}
 	file, _ := json.MarshalIndent(data, "", "\t")
 	os.WriteFile(d.Filename, file, fileInfo.Mode())
+}
+
+func (d *Database) AddsInIndex(comics []Comic) {
+	fileInfo, _ := os.Stat(d.Filename)
+	data := make(map[string][]int)
+	if fileInfo.Size() != 0 {
+		file, _ := os.ReadFile(d.Filename)
+		json.Unmarshal(file, &data)
+	}
+	for _, comic := range comics {
+		if comic.Id == 0 {
+			continue
+		}
+		for _, word := range comic.Keywords {
+			ids, ok := data[word]
+			if ok {
+				data[word] = append(ids, comic.Id)
+			} else {
+				data[word] = []int{comic.Id}
+			}
+		}
+	}
+	file, _ := json.MarshalIndent(data, "", "\t")
+	os.WriteFile(d.Filename, file, fileInfo.Mode())
+}
+
+func (d *Database) IndexEntries() map[string][]int {
+	fileInfo, _ := os.Stat(d.Filename)
+	data := make(map[string][]int)
+	if fileInfo.Size() == 0 {
+		return data
+	}
+	file, err := os.ReadFile(d.Filename)
+	if err != nil {
+		return data
+	}
+	json.Unmarshal(file, &data)
+	return data
+}
+
+func (d *Database) Entries() []Comic {
+	fileInfo, _ := os.Stat(d.Filename)
+
+	comics := make([]Comic, 0)
+	data := make(map[int]map[string]interface{})
+	if fileInfo.Size() == 0 {
+		return comics
+	}
+	file, err := os.ReadFile(d.Filename)
+	if err != nil {
+		return comics
+	}
+	err = json.Unmarshal(file, &data)
+	if err != nil {
+		return comics
+	}
+	for key, value := range data {
+		if value["keywords"] == nil {
+			continue
+		}
+		comics = append(comics, ComicFromDBEntry(key, value))
+	}
+	return comics
 }
 
 func (d *Database) EmptyEntries() []int {

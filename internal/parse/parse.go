@@ -1,4 +1,4 @@
-package main
+package parse
 
 import (
 	"context"
@@ -40,7 +40,7 @@ func ParseWorker(ctx context.Context, wg *sync.WaitGroup, queue chan<- xkcd.Entr
 	}
 }
 
-func ParallelParseComics(client xkcd.Client, db database.Database, amountGoroutines int) {
+func ParallelParseComics(client xkcd.Client, db, index database.Database, amountGoroutines int) {
 	fmt.Println("Начало парсинга!")
 	var wg sync.WaitGroup
 	entries := db.EmptyEntries()
@@ -55,7 +55,6 @@ func ParallelParseComics(client xkcd.Client, db database.Database, amountGorouti
 	notifyChan := make(chan bool, 1)
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	for i := 0; i < amountGoroutines; i++ {
-		fmt.Printf("%d/%d горутин учавствует в парсинге\n", i+1, amountGoroutines)
 		start := i*goroutineEntries + 1
 		end := start + goroutineEntries - 1
 		if i == amountGoroutines-1 {
@@ -88,6 +87,7 @@ Loop:
 		comic := ConverterEntryToComic(entry)
 		comics = append(comics, comic)
 	}
+	index.AddsInIndex(comics)
 	db.Adds(comics)
 	fmt.Println("Конец парсинга!")
 }

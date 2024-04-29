@@ -1,5 +1,5 @@
 db_file:
-  database.json
+  internal/testing/database.json
 
 source_url:
   https://xkcd.com
@@ -14,4 +14,4 @@ client_log_file:
   "logs/xkcd/bad_request.log"
 
 index_file:
-  index.json
+  internal/testing/index.json

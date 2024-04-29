@@ -14,9 +14,19 @@ func (c *Comic) ToDBEntry() (int, map[string]interface{}) {
 }
 
 func ComicFromDBEntry(id int, aboutComic map[string]interface{}) Comic {
+	keywordsInterface, ok := aboutComic["keywords"]
+	if !ok {
+		keywordsInterface = []interface{}{}
+	}
+
+	keywords := make([]string, len(keywordsInterface.([]interface{})))
+	for i, keyword := range keywordsInterface.([]interface{}) {
+		keywords[i] = keyword.(string)
+	}
+
 	return Comic{
 		Id:       id,
 		Url:      aboutComic["url"].(string),
-		Keywords: aboutComic["keywords"].([]string),
+		Keywords: keywords,
 	}
 }
