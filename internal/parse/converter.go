@@ -11,6 +11,6 @@ func ConverterEntryToComic(entry xkcd.Entry) database.Comic {
 	return database.Comic{
 		Id:       entry.Id,
 		Url:      entry.Url,
-		Keywords: words.Stemmer(entry.Alt),
+		Keywords: append(words.Stemmer(entry.Alt), words.Stemmer(entry.Title)...),
 	}
 }
