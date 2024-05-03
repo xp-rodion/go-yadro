@@ -41,9 +41,10 @@ func InitializeClient(url, logFile string, timeout int) xkcd.Client {
 	return client
 }
 
-func ParseCLIFlags() (configFile, proposal string, indexSearch bool) {
+func ParseCLIFlags() (configFile, proposal string, indexSearch bool, port string) {
 	flag.StringVar(&configFile, "c", "configs/config.yaml", "Configuration file")
 	flag.BoolVar(&indexSearch, "i", false, "Index Search")
+	flag.StringVar(&port, "p", "", "Port")
 	proposal = words.ReadCLIArgs()
 
 	flag.Parse()
@@ -59,4 +60,18 @@ func ParseCLIFlags() (configFile, proposal string, indexSearch bool) {
 	}
 
 	return
+}
+
+func CheckNewComics(db database.Database, client xkcd.Client) []int {
+	entries := db.MapEntries()
+	newComics := make([]int, 0)
+	for i := 1; i < client.ComicsCount+1; i++ {
+		if i == 404 {
+			continue
+		}
+		if _, suc := entries[i]; suc != true {
+			newComics = append(newComics, i)
+		}
+	}
+	return newComics
 }

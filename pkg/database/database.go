@@ -30,6 +30,9 @@ func (d *Database) Create(amountEntry int) (bool, error) {
 	defer file.Close()
 	data := make(map[int]map[string]interface{})
 	for i := 1; i < amountEntry+1; i++ {
+		if i == 404 {
+			continue
+		}
 		data[i] = map[string]interface{}{}
 	}
 	dataJson, err := json.MarshalIndent(data, "", "\t")
@@ -188,6 +191,23 @@ func (d *Database) Entries() []Comic {
 		comics = append(comics, ComicFromDBEntry(key, value))
 	}
 	return comics
+}
+
+func (d *Database) MapEntries() map[int]interface{} {
+	fileInfo, _ := os.Stat(d.Filename)
+	entries := make(map[int]interface{})
+	if fileInfo.Size() == 0 {
+		return entries
+	}
+	file, err := os.ReadFile(d.Filename)
+	if err != nil {
+		return entries
+	}
+	err = json.Unmarshal(file, &entries)
+	if err != nil {
+		return entries
+	}
+	return entries
 }
 
 func (d *Database) EmptyEntries() []int {

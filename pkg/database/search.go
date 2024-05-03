@@ -4,14 +4,14 @@ import (
 	"sort"
 )
 
-func DBRelevantComics(source []string, entries []Comic, count int) Results {
+func DBRelevantComics(source []string, entries []Comic) Results {
 	sourceMap := make(map[string]bool, len(source))
 	for _, entry := range source {
 		sourceMap[entry] = true
 	}
 	results := Search(sourceMap, entries)
 	sort.Sort(results)
-	return results[:count]
+	return results
 }
 
 func IndexRelevantComics(source []string, entries map[string][]int, count int) IndexResults {

@@ -14,6 +14,7 @@ type Config struct {
 	Goroutines    int    `yaml:"parallel"`
 	CacheFile     string `yaml:"cache_file"`
 	IndexFile     string `yaml:"index_file"`
+	Port          string `yaml:"port"`
 }
 
 func (c *Config) Init(filepath string) {

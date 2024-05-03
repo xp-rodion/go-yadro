@@ -8,16 +8,20 @@ import (
 )
 
 func main() {
-	configPath, proposal, indexSearch := utils.ParseCLIFlags()
+	configPath, proposal, indexSearch, _ := utils.ParseCLIFlags()
 	cnf := utils.InitializeConfig(configPath)
 	client := utils.InitializeClient(cnf.Url, cnf.CacheFile, 6)
 	db := utils.InitializeDB(cnf.Database, client.ComicsCount)
 	index := utils.InitializeIndex(cnf.IndexFile)
-	parse.ParallelParseComics(client, db, index, cnf.Goroutines)
+	entries := db.EmptyEntries()
+	comics := parse.ParallelParseComics(client, entries, cnf.Goroutines)
+	db.Adds(comics)
+	index.AddsInIndex(comics)
 	fmt.Println("\nРезультат поиска")
 	if indexSearch {
 		search.IndexRelevantComics(db, index, proposal, 10)
 	} else {
-		search.DBRelevantComics(db, proposal, 10)
+		comics := search.DBRelevantComics(db, proposal)
+		search.PrintDBRelevantComics(comics[:10])
 	}
 }
