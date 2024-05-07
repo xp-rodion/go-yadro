@@ -23,7 +23,9 @@ func (repo *JsonRepository) List(proposal string) ([]domain.Comic, error) {
 	comics := make([]domain.Comic, 0)
 	for _, result := range results {
 		if result.Weight > 0 {
-			comics = append(comics, domain.ConverterResultToComic(result))
+			comics = append(comics, domain.Comic{
+				URL: result.Url,
+			})
 		}
 	}
 	return comics, nil

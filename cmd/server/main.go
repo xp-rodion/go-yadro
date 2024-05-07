@@ -10,7 +10,6 @@ import (
 	"time"
 	"xkcd/internal/core/services"
 	"xkcd/internal/handlers"
-	"xkcd/internal/parse"
 	"xkcd/internal/repositories"
 	"xkcd/internal/server"
 	"xkcd/internal/utils"
@@ -21,9 +20,6 @@ func main() {
 	cnf := utils.InitializeConfig(configPath)
 	client := utils.InitializeClient(cnf.Url, cnf.CacheFile, 6)
 	db := utils.InitializeDB(cnf.Database, client.ComicsCount)
-	entries := db.EmptyEntries()
-	comics := parse.ParallelParseComics(client, entries, cnf.Goroutines)
-	db.Adds(comics)
 
 	repo := repositories.NewJsonRepository(db, client)
 	service := services.NewService(repo)

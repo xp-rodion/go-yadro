@@ -69,7 +69,9 @@ func CheckNewComics(db database.Database, client xkcd.Client) []int {
 		if i == 404 {
 			continue
 		}
-		if _, suc := entries[i]; suc != true {
+		result, suc := entries[i]
+		_, ok := result.(interface{})
+		if suc != true || ok {
 			newComics = append(newComics, i)
 		}
 	}
