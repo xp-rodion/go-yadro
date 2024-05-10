@@ -40,7 +40,62 @@ func ParseWorker(ctx context.Context, wg *sync.WaitGroup, queue chan<- xkcd.Entr
 	}
 }
 
-func ParallelParseComics(client xkcd.Client, db, index database.Database, amountGoroutines int) {
+func AllocationWorkers(ctx context.Context, wg *sync.WaitGroup, queue chan<- xkcd.Entry, client xkcd.Client, amountEntries, amountGoroutines int, entries []int) {
+	goroutineEntries := amountEntries / amountGoroutines
+	remainder := amountEntries - (goroutineEntries * amountGoroutines) // подсчет остатка
+	for i := 0; i < amountGoroutines; i++ {
+		start := i*goroutineEntries + 1
+		end := start + goroutineEntries - 1
+		if i == amountGoroutines-1 {
+			end += remainder
+		}
+		go ParseWorker(ctx, wg, queue, client, entries[start-1:end])
+	}
+}
+
+func ParallelParseComics(client xkcd.Client, entries []int, amountGoroutines int) []database.Comic {
+	fmt.Println("Начало парсинга!")
+	var wg sync.WaitGroup
+	amountEntries := len(entries)
+	queue := make(chan xkcd.Entry, amountEntries)
+	comics := make([]database.Comic, amountEntries)
+	wg.Add(amountGoroutines)
+	fmt.Printf("%d комиксов будут спаршены\n", amountEntries)
+
+	notifyChan := make(chan bool, 1)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+
+	AllocationWorkers(ctx, &wg, queue, client, amountEntries, amountGoroutines, entries)
+
+	go func() {
+		wg.Wait()
+		close(queue)
+		notifyChan <- true
+	}()
+
+Loop:
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Прерываю программу...")
+			stop()
+			break Loop
+		case <-notifyChan:
+			fmt.Println("Комиксы преобразованы, идет запись в бд, прерывание невозможно!")
+			break Loop
+		}
+	}
+
+	fmt.Println("Загрузка в бд...")
+	for entry := range queue {
+		comic := ConverterEntryToComic(entry)
+		comics = append(comics, comic)
+	}
+	fmt.Println("Конец парсинга!")
+	return comics
+}
+
+func __ParallelParseComics(client xkcd.Client, db, index database.Database, amountGoroutines int) {
 	fmt.Println("Начало парсинга!")
 	var wg sync.WaitGroup
 	entries := db.EmptyEntries()

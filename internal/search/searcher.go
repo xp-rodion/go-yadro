@@ -6,12 +6,16 @@ import (
 	"xkcd/pkg/words"
 )
 
-func DBRelevantComics(db database.Database, proposal string, count int) {
-	comics := db.Entries()
-	source := words.Stemmer(proposal)
-	for _, comic := range database.DBRelevantComics(source, comics, count) {
+func PrintDBRelevantComics(relevantComics database.Results) {
+	for _, comic := range relevantComics {
 		fmt.Printf("Weight: %d; Url: %s\n", comic.Weight, comic.Url)
 	}
+}
+
+func DBRelevantComics(db database.Database, proposal string) database.Results {
+	comics := db.Entries()
+	source := words.Stemmer(proposal)
+	return database.DBRelevantComics(source, comics)
 }
 
 func IndexRelevantComics(db, index database.Database, proposal string, count int) {

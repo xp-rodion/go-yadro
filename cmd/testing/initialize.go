@@ -11,5 +11,8 @@ func main() {
 	client := utils.InitializeClient(cnf.Url, cnf.CacheFile, 6)
 	db := utils.InitializeDB(cnf.Database, client.ComicsCount)
 	index := utils.InitializeIndex(cnf.IndexFile)
-	parse.ParallelParseComics(client, db, index, cnf.Goroutines)
+	entries := db.EmptyEntries()
+	comics := parse.ParallelParseComics(client, entries, cnf.Goroutines)
+	db.Adds(comics)
+	index.AddsInIndex(comics)
 }

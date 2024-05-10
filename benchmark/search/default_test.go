@@ -1,4 +1,4 @@
-package testing
+package search
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 )
 
 func initializeDef() (db, index database.Database) {
-	configPath := "../../configs/config.yaml"
+	configPath := "../configs/config.yaml"
 	cnf := utils.InitializeConfig(configPath)
 	client := utils.InitializeClient(cnf.Url, cnf.CacheFile, 6)
 	db = utils.InitializeDB(cnf.Database, client.ComicsCount)

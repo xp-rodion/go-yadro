@@ -15,3 +15,6 @@ client_log_file:
 
 index_file:
   index.json
+
+port:
+  8000
