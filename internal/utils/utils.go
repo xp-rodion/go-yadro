@@ -9,8 +9,8 @@ import (
 	"xkcd/pkg/xkcd"
 )
 
-func InitializeDB(filename string, amountEntry int) database.Database {
-	db := database.Database{}
+func InitializeJSON(filename string, amountEntry int) database.JSON {
+	db := database.JSON{}
 	db.Init(filename)
 	status := database.ValidateDatabase(db.Filename)
 	if status {
@@ -19,8 +19,18 @@ func InitializeDB(filename string, amountEntry int) database.Database {
 	return db
 }
 
-func InitializeIndex(filename string) database.Database {
-	db := database.Database{}
+func InitializeSQLite(DSN string) database.SQLite {
+	db := database.SQLite{}
+	db.Init(DSN)
+	status := db.Open()
+	if status {
+		fmt.Println("Error doesn't exist")
+	}
+	return db
+}
+
+func InitializeIndex(filename string) database.JSON {
+	db := database.JSON{}
 	db.Init(filename)
 	status := database.ValidateDatabase(db.Filename)
 	if status {
@@ -62,7 +72,7 @@ func ParseCLIFlags() (configFile, proposal string, indexSearch bool, port string
 	return
 }
 
-func CheckNewComics(db database.Database, client xkcd.Client) []int {
+func CheckNewComics(db database.JSON, client xkcd.Client) []int {
 	entries := db.MapEntries()
 	newComics := make([]int, 0)
 	for i := 1; i < client.ComicsCount+1; i++ {
@@ -70,8 +80,9 @@ func CheckNewComics(db database.Database, client xkcd.Client) []int {
 			continue
 		}
 		result, suc := entries[i]
-		_, ok := result.(interface{})
-		if suc != true || ok {
+		entry, ok := result.(map[string]interface{})
+		_, exists := entry["url"]
+		if suc != true || !ok || !exists {
 			newComics = append(newComics, i)
 		}
 	}

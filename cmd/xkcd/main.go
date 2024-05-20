@@ -11,7 +11,7 @@ func main() {
 	configPath, proposal, indexSearch, _ := utils.ParseCLIFlags()
 	cnf := utils.InitializeConfig(configPath)
 	client := utils.InitializeClient(cnf.Url, cnf.CacheFile, 6)
-	db := utils.InitializeDB(cnf.Database, client.ComicsCount)
+	db := utils.InitializeJSON(cnf.Database, client.ComicsCount)
 	index := utils.InitializeIndex(cnf.IndexFile)
 	entries := db.EmptyEntries()
 	comics := parse.ParallelParseComics(client, entries, cnf.Goroutines)

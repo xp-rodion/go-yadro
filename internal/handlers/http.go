@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"xkcd/internal/core/ports"
 )
@@ -20,6 +21,7 @@ func (h *HTTPHandler) List(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	key := "search"
 	w.Header().Set("Content-Type", "application/json")
+	fmt.Println(queryParams)
 	if proposal := queryParams.Get(key); queryParams.Has(key) && proposal != "" {
 		w.WriteHeader(http.StatusOK)
 		comics, err := h.comicsService.List(proposal)

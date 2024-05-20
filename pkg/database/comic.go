@@ -1,9 +1,9 @@
 package database
 
 type Comic struct {
-	Id       int    `json:"id"`
-	Url      string `json:"url"`
-	Keywords []string
+	Id       int    `json:"id" db:"id"`
+	Url      string `json:"url" db:"url"`
+	Keywords string `db:"keywords`
 }
 
 func (c *Comic) ToDBEntry() (int, map[string]interface{}) {
@@ -14,14 +14,17 @@ func (c *Comic) ToDBEntry() (int, map[string]interface{}) {
 }
 
 func ComicFromDBEntry(id int, aboutComic map[string]interface{}) Comic {
+	var keywords string
 	keywordsInterface, ok := aboutComic["keywords"]
 	if !ok {
-		keywordsInterface = []interface{}{}
+		keywords = ""
 	}
 
-	keywords := make([]string, len(keywordsInterface.([]interface{})))
-	for i, keyword := range keywordsInterface.([]interface{}) {
-		keywords[i] = keyword.(string)
+	keywords, ok = keywordsInterface.(string)
+	if !ok {
+		for _, keyword := range keywordsInterface.([]interface{}) {
+			keywords = keyword.(string)
+		}
 	}
 
 	return Comic{

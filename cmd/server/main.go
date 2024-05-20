@@ -19,7 +19,7 @@ func main() {
 	configPath, port, _, _ := utils.ParseCLIFlags()
 	cnf := utils.InitializeConfig(configPath)
 	client := utils.InitializeClient(cnf.Url, cnf.CacheFile, 6)
-	db := utils.InitializeDB(cnf.Database, client.ComicsCount)
+	db := utils.InitializeJSON(cnf.Database, client.ComicsCount)
 
 	repo := repositories.NewJsonRepository(db, client)
 	service := services.NewService(repo)

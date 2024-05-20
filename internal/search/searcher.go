@@ -12,13 +12,13 @@ func PrintDBRelevantComics(relevantComics database.Results) {
 	}
 }
 
-func DBRelevantComics(db database.Database, proposal string) database.Results {
+func DBRelevantComics(db database.JSON, proposal string) database.Results {
 	comics := db.Entries()
 	source := words.Stemmer(proposal)
 	return database.DBRelevantComics(source, comics)
 }
 
-func IndexRelevantComics(db, index database.Database, proposal string, count int) {
+func IndexRelevantComics(db, index database.JSON, proposal string, count int) {
 	source := words.Stemmer(proposal)
 	comics := index.IndexEntries()
 	results := database.IndexRelevantComics(source, comics, count)

@@ -9,16 +9,16 @@ import (
 	"xkcd/pkg/xkcd"
 )
 
-type JsonRepository struct {
-	db     database.JSON
+type SQLiteRepository struct {
+	db     database.SQLite
 	client xkcd.Client
 }
 
-func NewJsonRepository(db database.JSON, client xkcd.Client) *JsonRepository {
-	return &JsonRepository{db: db, client: client}
+func NewSQLiteRepository(db database.SQLite, client xkcd.Client) *SQLiteRepository {
+	return &SQLiteRepository{db: db, client: client}
 }
 
-func (repo *JsonRepository) List(proposal string) ([]domain.Comic, error) {
+func (repo *SQLiteRepository) List(proposal string) ([]domain.Comic, error) {
 	results := search.DBRelevantComics(repo.db, proposal)
 	comics := make([]domain.Comic, 0)
 	for _, result := range results {
@@ -31,7 +31,7 @@ func (repo *JsonRepository) List(proposal string) ([]domain.Comic, error) {
 	return comics, nil
 }
 
-func (repo *JsonRepository) Update() (domain.UpdateResponse, error) {
+func (repo *SQLiteRepository) Update() (domain.UpdateResponse, error) {
 	newComics := utils.CheckNewComics(repo.db, repo.client)
 	comics := parse.ParallelParseComics(repo.client, newComics, 6)
 	repo.db.Adds(comics)

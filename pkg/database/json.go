@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 )
 
-type Database struct {
+type JSON struct {
 	Filename string
 }
 
-func (d *Database) Init(filename string) {
+func (d *JSON) Init(filename string) {
 	d.Filename = filename
 }
 
@@ -22,7 +23,7 @@ func ValidateDatabase(filename string) bool {
 }
 
 // Create создает БД и сразу инциализирует ее ключами (делается для понимания считанных комиксов)
-func (d *Database) Create(amountEntry int) (bool, error) {
+func (d *JSON) Create(amountEntry int) (bool, error) {
 	file, err := os.Create(d.Filename)
 	if err != nil {
 		return false, fmt.Errorf("error creating database file %s: %s", d.Filename, err)
@@ -46,7 +47,7 @@ func (d *Database) Create(amountEntry int) (bool, error) {
 	return true, nil
 }
 
-func (d *Database) CreateIndex() (bool, error) {
+func (d *JSON) CreateIndex() (bool, error) {
 	file, err := os.Create(d.Filename)
 	if err != nil {
 		return false, fmt.Errorf("error creating database file %s: %s", d.Filename, err)
@@ -55,7 +56,7 @@ func (d *Database) CreateIndex() (bool, error) {
 	return true, nil
 }
 
-func (d *Database) Get(id int) (Comic, bool) {
+func (d *JSON) Get(id int) (Comic, bool) {
 	data := make(map[int]map[string]interface{})
 	fileInfo, _ := os.Stat(d.Filename)
 
@@ -74,7 +75,7 @@ func (d *Database) Get(id int) (Comic, bool) {
 	return ComicFromDBEntry(id, content), true
 }
 
-func (d *Database) Gets(ids []int) []Comic {
+func (d *JSON) Gets(ids []int) []Comic {
 	comics := make([]Comic, 0)
 	data := make(map[int]map[string]interface{})
 	fileInfo, _ := os.Stat(d.Filename)
@@ -97,7 +98,7 @@ func (d *Database) Gets(ids []int) []Comic {
 	return comics
 }
 
-func (d *Database) Add(comic Comic) {
+func (d *JSON) Add(comic Comic) {
 	fileInfo, _ := os.Stat(d.Filename)
 
 	data := make(map[int]map[string]interface{})
@@ -111,7 +112,7 @@ func (d *Database) Add(comic Comic) {
 	os.WriteFile(d.Filename, file, fileInfo.Mode())
 }
 
-func (d *Database) Adds(comics []Comic) {
+func (d *JSON) Adds(comics []Comic) {
 	fileInfo, _ := os.Stat(d.Filename)
 
 	data := make(map[int]map[string]interface{})
@@ -130,7 +131,7 @@ func (d *Database) Adds(comics []Comic) {
 	os.WriteFile(d.Filename, file, fileInfo.Mode())
 }
 
-func (d *Database) AddsInIndex(comics []Comic) {
+func (d *JSON) AddsInIndex(comics []Comic) {
 	fileInfo, _ := os.Stat(d.Filename)
 	data := make(map[string][]int)
 	if fileInfo.Size() != 0 {
@@ -141,7 +142,8 @@ func (d *Database) AddsInIndex(comics []Comic) {
 		if comic.Id == 0 {
 			continue
 		}
-		for _, word := range comic.Keywords {
+		keywords := strings.Split(comic.Keywords, ",")
+		for _, word := range keywords {
 			ids, ok := data[word]
 			if ok {
 				data[word] = append(ids, comic.Id)
@@ -154,7 +156,7 @@ func (d *Database) AddsInIndex(comics []Comic) {
 	os.WriteFile(d.Filename, file, fileInfo.Mode())
 }
 
-func (d *Database) IndexEntries() map[string][]int {
+func (d *JSON) IndexEntries() map[string][]int {
 	fileInfo, _ := os.Stat(d.Filename)
 	data := make(map[string][]int)
 	if fileInfo.Size() == 0 {
@@ -168,10 +170,10 @@ func (d *Database) IndexEntries() map[string][]int {
 	return data
 }
 
-func (d *Database) Entries() []Comic {
+func (d *JSON) Entries() [] Comic {
 	fileInfo, _ := os.Stat(d.Filename)
 
-	comics := make([]Comic, 0)
+	comics := make([] Comic, 0)
 	data := make(map[int]map[string]interface{})
 	if fileInfo.Size() == 0 {
 		return comics
@@ -193,7 +195,7 @@ func (d *Database) Entries() []Comic {
 	return comics
 }
 
-func (d *Database) MapEntries() map[int]interface{} {
+func (d *JSON) MapEntries() map[int]interface{} {
 	fileInfo, _ := os.Stat(d.Filename)
 	entries := make(map[int]interface{})
 	if fileInfo.Size() == 0 {
@@ -210,7 +212,7 @@ func (d *Database) MapEntries() map[int]interface{} {
 	return entries
 }
 
-func (d *Database) EmptyEntries() []int {
+func (d *JSON) EmptyEntries() []int {
 	fileInfo, _ := os.Stat(d.Filename)
 
 	entries := make([]int, 0)

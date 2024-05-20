@@ -2,6 +2,7 @@ package database
 
 import (
 	"sort"
+	"strings"
 )
 
 func DBRelevantComics(source []string, entries []Comic) Results {
@@ -33,13 +34,14 @@ func IndexRelevantComics(source []string, entries map[string][]int, count int) I
 func Search(source map[string]bool, entries []Comic) Results {
 	results := make(Results, 0, len(entries))
 	for _, entry := range entries {
-		results = append(results, Result{Weight: Weight(source, entry), Url: entry.Url, Keywords: entry.Keywords})
+		keywords := strings.Split(entry.Keywords, ",")
+		results = append(results, Result{Weight: Weight(source, entry), Url: entry.Url, Keywords: keywords})
 	}
 	return results
 }
 
 func Weight(source map[string]bool, entry Comic) int {
-	keywords := entry.Keywords
+	keywords := strings.Split(entry.Keywords, ",")
 	weight := 0
 	for _, word := range keywords {
 		_, ok := source[word]
